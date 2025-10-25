@@ -90,7 +90,7 @@ One of the best practices of DevOps is to clean up after resources are no longer
 - Run `destroy_infra.yml` to destroy the code engine project
 - Run `destroy_monitoring.yml` to destroy the monitoring instance.
 
-[Warning!]
+> [!CAUTION]
 > IBM Cloud has a concept called reclaimations. This means that destroyed resources are kept in a state where they can be reclaimed for seven days.
 > During the reclaimation period, you cannot create resources with the same name as resources in the reclaimation state.
 > To create resources with the same name, you need to log into the IBM Cloud, go to the section where the resources reside and delete reclaimations.

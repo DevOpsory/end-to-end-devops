@@ -118,8 +118,8 @@ jobs:
           PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
         run: |
           echo ${{ env.PASSWORD }} | docker login -u ${{ env.USERNAME }} --password-stdin  docker.cloudsmith.io
-          docker tag sample-docker-image:latest docker.cloudsmith.io/adewale-opeloyeru-s6dz/sample-docker-repo/sample-docker-image:latest
-          docker push docker.cloudsmith.io/adewale-opeloyeru-s6dz/sample-docker-repo/sample-docker-image:latest
+          docker tag sample-docker-image:latest docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest
+          docker push docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest
 
   deploy:
     name: Continuous Deployment
@@ -175,12 +175,12 @@ jobs:
           if ibmcloud ce application get --name sample-deployed-app > /dev/null 2>&1; then
             echo "updating application..."
             ibmcloud ce application update --name sample-deployed-app \
-            --image docker.cloudsmith.io/adewale-opeloyeru-s6dz/sample-docker-repo/sample-docker-image:latest \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest \
             --registry-secret my-secret
           else
             echo "deploying new application..."
             ibmcloud ce application create --name sample-deployed-app \
-            --image docker.cloudsmith.io/adewale-opeloyeru-s6dz/sample-docker-repo/sample-docker-image:latest \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest \
             --registry-secret my-secret --cpu 0.5 --memory 1G --max-scale 1 --min-scale 0 
           fi
 

@@ -50,8 +50,8 @@ jobs:
           mvn clean package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.java.jdkHome=${{ env.JAVA_HOME }} \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.organization=adewaleopeloyeru \
-          -Dsonar.projectKey=AdewaleOpeloyeru_end-to-end-devops
+          -Dsonar.organization=sample-organization \
+          -Dsonar.projectKey=sampleorgkey
 
       - name: setup node.js
         uses: actions/setup-node@v4

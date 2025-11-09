@@ -161,7 +161,7 @@ jobs:
 
       - name: create registry secret
         env:
-          USERNAME: adewale-opeloyeru
+          USERNAME: my-cloudsmith-user
           PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
         run: |
           if ibmcloud ce secret get --name my-secret; then

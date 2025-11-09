@@ -114,7 +114,7 @@ jobs:
 
       - name: tag and push to cloudsmith
         env:
-          USERNAME: adewale-opeloyeru
+          USERNAME: my-cloudsmith-user
           PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
         run: |
           echo ${{ env.PASSWORD }} | docker login -u ${{ env.USERNAME }} --password-stdin  docker.cloudsmith.io

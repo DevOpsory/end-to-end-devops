@@ -46,7 +46,7 @@ There is an article that provides step by step guidance here: [link-comming-soon
 ### Prerequisites
 #### Setup your own Repository
 - Fork this repository.
-- Create a new environment called `production` and add yourself as a reviewer.
+- Create a new environment called `dev` and add yourself as a reviewer.
 #### Setup Doppler
 Doppler is an application used for secret management.
 - Create a free doppler account to store the secrets used in the GitHub actions workflows: https://www.doppler.com/.

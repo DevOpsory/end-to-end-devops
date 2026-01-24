@@ -15,19 +15,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.2.0
+        with:
+          versionSpec: '6.4.x'
 
       - name: Generate semver
-        id: semver-tag
-        uses: gandarez/semver-action@master
-        with:
-          branching_model: "trunk-based"
-          prefix: "ver"
-          main_branch_name: "main"
-          patch_pattern: "^fix/.+"
-          minor_pattern: "^feat/.+"
-          major_pattern: "^major/.+"
-          build_pattern: "^build/.+"
-          exclude_pattern: "^ignore/.+"
+        id: generate_semver
+        uses: gittools/actions/gitversion/execute@v4.2.0
 
-      - name: "Created tag"
-        run: echo "tag ${{ steps.semver-tag.outputs.semver_tag }}"
+      - name: Show semver
+        run: |
+          echo "FullSemVer: ${{ steps.generate_semver.outputs.fullSemVer }}"

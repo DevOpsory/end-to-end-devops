@@ -1,9 +1,10 @@
 name: Add semver
 on:
   push:
-    branches: feat-semver
-  paths:
-    - '.github/workflows/test-semver.yml'
+    branches:
+      - feat-semver
+    paths:
+      - '.github/workflows/test-semver.yml'
 
 permissions:
   contents: read

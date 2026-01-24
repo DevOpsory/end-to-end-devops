@@ -1,0 +1,32 @@
+name: Add semver
+on:
+  push:
+    branches: feat-semver
+  paths:
+    - '.github/workflows/test-semver.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-semver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate semver
+        id: semver-tag
+        uses: gandarez/semver-action@master
+        with:
+          branching_model: "trunk-based"
+          prefix: "ver"
+          main_branch_name: "main"
+          patch_pattern: "^fix/.+"
+          minor_pattern: "^feat/.+"
+          major_pattern: "^major/.+"
+          build_pattern: "^build/.+"
+          exclude_pattern: "^ignore/.+"
+
+      - name: "Created tag"
+        run: echo "tag ${{ steps.semver-tag.outputs.semver_tag }}"

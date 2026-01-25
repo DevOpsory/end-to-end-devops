@@ -111,16 +111,16 @@ jobs:
           cd app
           mvn clean package -DskipTests
 
-      - name: Install GitVersion
+      - name: install gitversion
         uses: gittools/actions/gitversion/setup@v4.2.0
         with:
           versionSpec: '6.4.x'
 
-      - name: Generate semver
+      - name: generate semver
         id: generate_semver
         uses: gittools/actions/gitversion/execute@v4.2.0
 
-      - name: Show semver
+      - name: show semver
         run: |
           echo "FullSemVer: ${{ steps.generate_semver.outputs.fullSemVer }}"
 

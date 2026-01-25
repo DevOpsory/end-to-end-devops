@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: fetch tokens
         id: doppler
@@ -85,9 +85,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-test
     if:   ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    outputs:
+      semver: ${{ steps.generate_semver.outputs.fullSemVer }}
     steps:
       - name: checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: fetch tokens
         id: doppler
@@ -107,6 +111,19 @@ jobs:
           cd app
           mvn clean package -DskipTests
 
+      - name: install gitversion
+        uses: gittools/actions/gitversion/setup@v4.2.0
+        with:
+          versionSpec: '6.4.x'
+
+      - name: generate semver
+        id: generate_semver
+        uses: gittools/actions/gitversion/execute@v4.2.0
+
+      - name: show semver
+        run: |
+          echo "FullSemVer: ${{ steps.generate_semver.outputs.fullSemVer }}"
+
       - name: build docker image
         run: |
           cd app
@@ -118,14 +135,16 @@ jobs:
           PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
         run: |
           echo ${{ env.PASSWORD }} | docker login -u ${{ env.USERNAME }} --password-stdin  docker.cloudsmith.io
-          docker tag sample-docker-image:latest docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest
-          docker push docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest
+          docker tag sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }} docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
+          docker push docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
 
   deploy:
     name: Continuous Deployment
     runs-on: ubuntu-latest
     needs: containerize-and-deliver
     if:   ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    env:
+      SEMVER: ${{ needs.containerize-and-deliver.outputs.semver }}
     steps:
       - name: fetch tokens
         id: doppler
@@ -175,12 +194,12 @@ jobs:
           if ibmcloud ce application get --name sample-deployed-app > /dev/null 2>&1; then
             echo "updating application..."
             ibmcloud ce application update --name sample-deployed-app \
-            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ env.SEMVER }} \
             --registry-secret my-secret
           else
             echo "deploying new application..."
             ibmcloud ce application create --name sample-deployed-app \
-            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:latest \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ env.SEMVER }} \
             --registry-secret my-secret --cpu 0.5 --memory 1G --max-scale 1 --min-scale 0 
           fi
 

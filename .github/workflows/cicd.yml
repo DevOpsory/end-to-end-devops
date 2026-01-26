@@ -135,7 +135,7 @@ jobs:
           PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
         run: |
           echo ${{ env.PASSWORD }} | docker login -u ${{ env.USERNAME }} --password-stdin  docker.cloudsmith.io
-          docker tag sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }} docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
+          docker tag sample-docker-image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
           docker push docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
 
   deploy:

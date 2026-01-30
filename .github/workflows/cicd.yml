@@ -69,13 +69,13 @@ jobs:
         run: snyk test --all-projects --severity-threshold=high
 
       - name: initialize codeql
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: java
           build-mode: autobuild
 
       - name: perform codeql analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
 
       - name: test build docker image
         run: |

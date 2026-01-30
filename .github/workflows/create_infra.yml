@@ -11,6 +11,12 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v3
 
+      - name: run checkov scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          output_format: cli
+          directory: ./infra
+
       - name: fetch tokens
         id: doppler
         uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87

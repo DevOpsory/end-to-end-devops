@@ -6,11 +6,13 @@ on:
       - '**'
     paths:
       - 'app/**'
+      - '.github/workflows/cicd.yml'
   pull_request:
     branches:
       - '**'
     paths:
       - 'app/**'
+      - '.github/workflows/cicd.yml'
   workflow_dispatch:
 
 permissions:
@@ -79,6 +81,14 @@ jobs:
         run: |
           cd app
           docker build -t sample-docker-image .
+      
+      - name: scan docker image with trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: sample-docker-image
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
 
   containerize-and-deliver:
     name: Continuous Delivery

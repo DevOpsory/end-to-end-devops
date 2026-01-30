@@ -6,11 +6,13 @@ on:
       - '**'
     paths:
       - 'app/**'
+      - '.github/workflows/cicd.yml'
   pull_request:
     branches:
       - '**'
     paths:
       - 'app/**'
+      - '.github/workflows/cicd.yml'
   workflow_dispatch:
 
 permissions:

@@ -1,3 +1,304 @@
+# A BEGINER’S PRACTICAL GUIDE TO DEVOPS
+### _LEARN DEVOPS BY DEPLOYING A SAMPLE APPLICATION_
+For a new or aspiring joiner in DevOps, the sheer breadth of the technology stack can feel overwhelming and it may be difficult to connect everything to together to see the end picture. The best way to learn DevOps isn’t by memorising tools or watching endless tutorials. It’s by building something real. So instead of giving you another abstract explanation, this tutorial drops you straight into the real thing with a DevOps project that you can replicate at zero cost. You’ll build, deploy and monitor an actual application, just like a DevOps engineer would on the job. This guide walks you through the entire process step by step, with complex concepts broken down clearly and best practices highlighted along the way.
+
+> [!INFO]
+> This tutorial is a deep dive for beginners. Don't rush! I recommend breaking it into multiple sessions to ensure the concepts really stick.
+
+## OVERVIEW OF PROJECT
+The project consists of the following components:
+-   A simple ‘welcome to devops’ application written in java,
+-   A pipeline to create infrastructure through Infrastructure as code that the application will be deployed on,
+-   A CI/CD pipeline to build and test the application, package it into a Docker container and deploy it to a target infrastructure,
+-	A pipeline to create infrastructure to monitor the deployed application, and 
+-	Pipelines to destroy created infrastructure once you have completed the project and are no longer actively working on it.
+
+## DEVOPS COMPONENTS YOU WILL LEARN
+The project in this repository touches on core components like:
+-	Source code version control,
+-	Secret management,
+-	Continuous integration and Continuous delivery/deployment (CI/CD),
+-	Infrastructure as code,
+-	Dependencies scanning,
+-	Vulnerabilities scanning,
+-	Application versioning
+-	Artifacts management,
+-	Containerization and Container Orchestration (Abstracted Kubernetes for simplicity),
+-	Monitoring.
+
+> [!WARNING]
+> In this tutorial, I’ve stripped down the jargon to give you a clear mental model of DevOps.
+> The goal is to help you understand the "why" and "what" of each component and see examples of tools in action.
+> While this gets you started quickly, it does not replace the need for deep technical mastery of tools and components as you grow.
+
+Now Let’s dive into deploying your own version of the project. I enjoyed creating this project. I hope you enjoy replicating it and even go further to creating your own unique projects.
+
+## DEPLOYING YOUR OWN VERSION OF THE PROJECT
+### Fork the Repository
+The first thing you need to do is to fork the project.
+
+![fork repo](./assets/imgs/fork_repo.png)
+
+If you are unfamiliar with GitHub, A simple explanation is that it is a solution for storing your code plus associated files and changes you make to them over time. It is based on Git, a version control system that tracks changes in any directory where it is initialized. To fork this repository, you must first create your own [GitHub account](https://github.com/signup).
+
+When you fork a repository, GitHub copies the content of that repository to your own GitHub account. The content of your forked repository should be an exact copy of this repository. Your repository should contain the app code, infrastructure code, cicd pipelines and other files.
+
+In practice, keeping your application code and infrastructure configuration in the same repository is considered poor practice. I kept them in the same repository to make this project easy for beginners to follow. The app folder contains the application code and container image definition. The infra folder contains the deployment infrastructure code and the monitoring folder contains the monitoring infrastructure code. It is a best practice to separate monitoring infrastructure from the deployment infrastructure. This helps facilitate detection of issues independently of the systems or applications being monitored, reduces risk and improves performance.
+
+### Setup Secrets Management
+Secrets management is an important concept in DevOps that looks at the secure handling of credentials used in pipelines. I collected some data driven reports to show you the importance of proper credential handling and give you an idea of how devastating badly handled credentials can be. A 2025 data analysis by [GitGuardian](https://www.gitguardian.com/state-of-secrets-sprawl-report-2025) revealed that about 23.8 million new secrets were detected in public GitHub commits in 2024 (+25% from the previous year). Leaked secrets, when they get into the hands of bad actors can lead to severe consequences like data breach. [A study at IBM](https://www.ibm.com/reports/data-breach) currently estimates the global average cost of data breach to be $4.4M.
+
+The easiest method of secrets handling is using GitHub Secrets which hosts secrets within a repository. In practice, organizations find this insufficient for many good reasons. To give you one very simplified example, imagine a hacker gets into your organization’s GitHub repo, they don’t just steal your code; they find the keys to your actual house. With those stored secrets, they can log into your infrastructure, delete your databases, or steal customer data, turning a 'code leak' into a total business shutdown. To ensure tight security in adherence to best practices, organizations use a self-hosted secrets management platform. To help you understand what this feels like in real practice, the pipelines in this project use secrets stored in a free vendor-hosted secret management account from Doppler. The downside to using a free account is that your secrets are stored with the vendor and fetching those secrets requires a token that we need to store in GitHub Secrets. Nevertheless, this implementation gives you a feel of how secrets are managed in DevOps pipelines.
+
+Create a free account on https://www.doppler.com. Once in your account, go to projects and create a new project called sample-project.
+
+![doppler setup](./assets/imgs/doppler_setup.png)
+
+The project should contain dev, stage and prod environments by default. You will store your secrets in the dev environment. Go to the dev environment -> access -> generate, to generate a service token.
+
+![doppler token](./assets/imgs/doppler_token.png)
+
+Add the service token as a secret named DOPPLER_TOKEN in actions variables in your own fork of this repository. Click on Settings -> Secrets and Variables -> Actions -> New repository secret.
+
+![doppler token github secret](./assets/imgs/doppler_github_secret.png)
+
+### Create Deployment Infrastructure
+Think of the deployment infrastructure as the computer on which your application will run. The computer will be hosted in the cloud. Cloud Computing is the process of using computers provided by Cloud Providers to run applications and services in exchange for a fee. Businesses and engineers don’t have to host physical computers, servers or data centres. One obvious advantage of this is that you can choose to pay for computing resources only when you need them and don’t need to worry about the purchase or maintenance of physical computing resources. According to research by [Gitnux](https://gitnux.org/cloud-industry-statistics/), over 90% of enterprises are using cloud services in some capacity with nearly 60% of companies seeing cost savings as the primary benefit of running applications in the cloud.
+
+The deployment infrastructure in this project is defined as code using Terraform. Terraform is an Infrastructure as Code (IaC) language, developed by Hashicorp and is widely used in the DevOps practice. One big advantage of using infrastructure as code is that it streamlines, standardizes and automates infrastructure creation. Imagine you want to create hundreds of servers in the cloud, doing this on the cloud provider’s UI will be error prone and grossly inefficient. IaC tools like Terraform can help you automate and streamline such tasks. If you are interested in learning more about how industries adopt IaC, you can look at the report by [Grand View Research](https://www.grandviewresearch.com/industry-analysis/infrastructure-as-code-market-report).
+
+To align the infrastructure creation with DevOps best practices, a pipeline named create_infra.yml has been written and stored in the .github/workflows folder. To be able to run the pipeline to create the infrastructure, there are some prerequisites that you must complete.
+
+#### Prerequisites
+First, create a free IBM Cloud account, https://cloud.ibm.com. Then, create an API key named IBMCLOUD_API_KEY by clicking `Manage` -> `Access (IAM)` -> `API Keys` -> `Create`. Make sure you copy the key somewhere safe as you will need to add it to your Hashicorp account which you will create next.
+
+![ibmcloud api key](./assets/imgs/ibmcloud_api_key.png)
+
+Even though you’ve created the API key, it may not be usable with the pipelines in this project unless you go to `Manage` -> `Access (IAM)` -> `Settings` -> `Authentication` and in the `MFA` panel, make sure `Disable CLI logins with only a password` is unchecked.
+
+![ibmcloud api key enable](./assets/imgs/ibmcloud_api_key_enable.png)
+
+Next, create a free [Hashicorp Cloud Platform](https://app.terraform.io) account. This is the account where Terraform will store and retrieve data required for the infrastructure you are trying to create. You need an organization in your account which will host the workspace where terraform will store the state of your infrastructure and fetch the credential to authenticate with your IBM Cloud account. Create a personal organization named end-to-end-devops.
+
+![terraform org setup pic 1](./assets/imgs/terraform_org1.png)
+
+![terraform org setup pic 2](./assets/imgs/terraform_org2.png)
+
+![terraform org setup pic 3](./assets/imgs/terraform_org3.png)
+
+Once the organization is created, select it and create a new workspace called end-to-end-devops-infra.
+
+![terraform workspace setup pic 1](./assets/imgs/terraform_workspace1.png)
+
+A pop up will ask you to select a project to associate the workspace with. Your organization should come with a default project. Select the default project and click on `Create`.
+
+![terraform workspace setup pic 2](./assets/imgs/terraform_workspace2.png)
+
+On the next page, select `CLI driven workflow`.
+
+![terraform workspace setup pic 3](./assets/imgs/terraform_workspace3.png)
+
+On the next page, enter the name of the workspace and click on `Create`.
+
+![terraform workspace setup pic 4](./assets/imgs/terraform_workspace4.png)
+
+Once the workspace has been created, add a new workspace variable by clicking on the workspace -> `variables` -> `Add variable`.
+
+![terraform variables setup pic 1](./assets/imgs/terraform_variables1.png)
+
+Make sure to select Terraform variable and Sensitive in the pop up. Enter ibmcloud_api_key in the `Key` field and paste the IBMCLOUD_API_KEY that you created earlier in the `Value` field.
+
+![terraform variables setup pic 2](./assets/imgs/terraform_variables2.png)
+
+Create another workspace named `end-to-end-devops-monitoring` and add your IBMCLOUD_API_KEY to it following the same steps as above.
+
+Next, create a Terraform API token by selecting `Account settings` -> `Tokens` -> `Create an API token`.
+
+![terraform api token pic 1](./assets/imgs/terraform_api_token1.png)
+
+Give it an identifying name like END-TO-END-DEVOPS-TOKEN (the name you give it here does not matter) and set an expiration time.
+
+![terraform api token pic 2](./assets/imgs/terraform_api_token2.png)
+
+Add the generated Terraform token as a secret to the dev workspace in your Doppler account. Name the secret TERRAFORM_TOKEN.
+
+![doppler terraform token](./assets/imgs/doppler_terraform_token.png)
+
+Lastly, create an environment named “dev” in your GitHub repository. This will allow you approve the job that applies the infrastructure changes after reviewing the plan generated by Terraform. Click on `Settings` -> `Environments` -> `New environment`.
+
+![github environment setup pic 1](./assets/imgs/github_env1.png)
+
+Click on `Configure environment`, check `Required reviewers`, add your GitHub user name, and then click `Save protection rules`.
+
+![github environment setup pic 2](./assets/imgs/github_env2.png)
+
+![github environment setup pic 3](./assets/imgs/github_env3.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # End-to-End-DevOps
 This repo contains code that is used to implement different stages of a DevOps journey, from application code to deployment on a target infrastructure. The code is intended to serve as an adoptable example for new entrants into DevOps and CI/CD. The code is arranged into 4 folders based on functionality and kept in this single repository to make it easy for beginners to follow through and recreate the deployment. In a real DevOps environment, the code will most likely be organized into different repos, following best practices on code separation. At the time of creating this project, maximum effort has been made to ensure that all the resources used in the deployment are free 😊, from cloud infrastructure to CI/CD tools. A more comprehensive article containing every step of the journey can be found here: [link-comming-soon](www.example.com). The article also breaks down key technical concepts in a non technical way to help beginners gain better understanding, so be sure to reference it if you find anything confusing.
 

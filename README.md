@@ -80,7 +80,7 @@ Even though you’ve created the API key, it may not be usable with the pipeline
 
 ![ibmcloud api key enable](./assets/imgs/ibmcloud_api_key_enable.png)
 
-Next, create a free [Hashicorp Cloud Platform](https://app.terraform.io) account. This is the account where Terraform will store and retrieve data required for the infrastructure you are trying to create. You need an organization in your account which will host the workspace where terraform will store the state of your infrastructure and fetch the credential to authenticate with your IBM Cloud account. Create a personal organization named end-to-end-devops.
+Next, create a free [Hashicorp Cloud Platform](https://app.terraform.io) account. This is the account where Terraform will store and retrieve data required for the infrastructure you are trying to create. You need an organization in your account which will host the workspace where terraform will store the state of your infrastructure and fetch the credential to authenticate with your IBM Cloud account. Create a personal organization named `end-to-end-devops`.
 
 ![terraform org setup pic 1](./assets/imgs/terraform_org1.png)
 
@@ -88,7 +88,7 @@ Next, create a free [Hashicorp Cloud Platform](https://app.terraform.io) account
 
 ![terraform org setup pic 3](./assets/imgs/terraform_org3.png)
 
-Once the organization is created, select it and create a new workspace called end-to-end-devops-infra.
+Once the organization is created, select it and create a new workspace called `end-to-end-devops-infra`.
 
 ![terraform workspace setup pic 1](./assets/imgs/terraform_workspace1.png)
 
@@ -108,7 +108,7 @@ Once the workspace has been created, add a new workspace variable by clicking on
 
 ![terraform variables setup pic 1](./assets/imgs/terraform_variables1.png)
 
-Make sure to select Terraform variable and Sensitive in the pop up. Enter ibmcloud_api_key in the `Key` field and paste the IBMCLOUD_API_KEY that you created earlier in the `Value` field.
+Make sure to select Terraform variable and Sensitive in the pop up. Enter `ibmcloud_api_key` in the `Key` field and paste the IBMCLOUD_API_KEY that you created earlier in the `Value` field.
 
 ![terraform variables setup pic 2](./assets/imgs/terraform_variables2.png)
 

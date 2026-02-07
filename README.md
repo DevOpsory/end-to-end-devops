@@ -2,7 +2,7 @@
 ### _LEARN DEVOPS BY DEPLOYING A SAMPLE APPLICATION_
 For a new or aspiring joiner in DevOps, the sheer breadth of the technology stack can feel overwhelming and it may be difficult to connect everything to together to see the end picture. The best way to learn DevOps isn’t by memorising tools or watching endless tutorials. It’s by building something real. So instead of giving you another abstract explanation, this tutorial drops you straight into the real thing with a DevOps project that you can replicate at zero cost. You’ll build, deploy and monitor an actual application, just like a DevOps engineer would on the job. This guide walks you through the entire process step by step, with complex concepts broken down clearly and best practices highlighted along the way.
 
-> [!INFO]
+> [!NOTE]
 > This tutorial is a deep dive for beginners. Don't rush! I recommend breaking it into multiple sessions to ensure the concepts really stick.
 
 ## OVERVIEW OF PROJECT
@@ -27,9 +27,9 @@ The project in this repository touches on core components like:
 -	Monitoring.
 
 > [!WARNING]
-> In this tutorial, I’ve stripped down the jargon to give you a clear mental model of DevOps.
-> The goal is to help you understand the "why" and "what" of each component and see examples of tools in action.
-> While this gets you started quickly, it does not replace the need for deep technical mastery of tools and components as you grow.
+> - In this tutorial, I’ve stripped down the jargon to give you a clear mental model of DevOps.
+> - The goal is to help you understand the "why" and "what" of each component and see examples of tools in action.
+> - While this gets you started quickly, it does not replace the need for deep technical mastery of tools and components as you grow.
 
 Now Let’s dive into deploying your own version of the project. I enjoyed creating this project. I hope you enjoy replicating it and even go further to creating your own unique projects.
 

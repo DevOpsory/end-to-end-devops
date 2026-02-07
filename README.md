@@ -60,7 +60,7 @@ The project should contain dev, stage and prod environments by default. You will
 
 ![doppler token](./assets/imgs/doppler_token.png)
 
-Add the service token as a secret named DOPPLER_TOKEN in actions variables in your own fork of this repository. Click on `Settings` -> `Secrets and Variables` -> `Actions` -> `New repository secret`.
+Add the service token as a secret named `DOPPLER_TOKEN` in actions variables in your own fork of this repository. Click on `Settings` -> `Secrets and Variables` -> `Actions` -> `New repository secret`.
 
 ![doppler token github secret](./assets/imgs/doppler_github_secret.png)
 
@@ -122,7 +122,7 @@ Give it an identifying name like END-TO-END-DEVOPS-TOKEN (the name you give it h
 
 ![terraform api token pic 2](./assets/imgs/terraform_api_token2.png)
 
-Add the generated Terraform token as a secret to the dev workspace in your Doppler account. Name the secret TERRAFORM_TOKEN.
+Add the generated Terraform token as a secret to the dev workspace in your Doppler account. Name the secret `TERRAFORM_TOKEN`.
 
 ![doppler terraform token](./assets/imgs/doppler_terraform_token.png)
 

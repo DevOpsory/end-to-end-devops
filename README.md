@@ -56,11 +56,11 @@ Create a free account on https://www.doppler.com. Once in your account, go to pr
 
 ![doppler setup](./assets/imgs/doppler_setup.png)
 
-The project should contain dev, stage and prod environments by default. You will store your secrets in the dev environment. Go to the dev environment -> access -> generate, to generate a service token.
+The project should contain dev, stage and prod environments by default. You will store your secrets in the dev environment. Go to the dev environment -> `access` -> `generate`, to generate a service token.
 
 ![doppler token](./assets/imgs/doppler_token.png)
 
-Add the service token as a secret named DOPPLER_TOKEN in actions variables in your own fork of this repository. Click on Settings -> Secrets and Variables -> Actions -> New repository secret.
+Add the service token as a secret named DOPPLER_TOKEN in actions variables in your own fork of this repository. Click on `Settings` -> `Secrets and Variables` -> `Actions` -> `New repository secret`.
 
 ![doppler token github secret](./assets/imgs/doppler_github_secret.png)
 

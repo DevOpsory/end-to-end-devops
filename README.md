@@ -210,15 +210,126 @@ When you created your IBM Cloud account earlier, a resource group named “Defau
 
 #### Explanation of the pipeline
 
+```yml
+name: Create Required Infrastructure 
 
+on:
+  workflow_dispatch:
 
+jobs:
+  plan:
+    name: plan and review
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
 
+      - name: run checkov scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          output_format: cli
+          directory: ./infra
 
+      - name: fetch tokens
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
 
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@c529327889820530c60b4ce5bbc8d6099e166666
+        with:
+          terraform_version: 1.13.3
 
+      - name: set terraform cloud token
+        run: |
+          echo "TF_TOKEN_app_terraform_io=${{ steps.doppler.outputs.TERRAFORM_TOKEN }}" >> $GITHUB_ENV
 
+      - name: terraform init
+        run: |
+          cd infra
+          terraform init
 
+      - name: terraform plan
+        run: |
+          cd infra
+          terraform plan
 
+  apply:
+    name: apply changes
+    runs-on: ubuntu-latest
+    needs: plan
+    environment:
+      name: dev
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: fetch tokens
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@c529327889820530c60b4ce5bbc8d6099e166666
+        with:
+          terraform_version: 1.13.3
+
+      - name: set terraform cloud token
+        run: |
+          echo "TF_TOKEN_app_terraform_io=${{ steps.doppler.outputs.TERRAFORM_TOKEN }}" >> $GITHUB_ENV
+    
+      - name: terraform init
+        run: |
+          cd infra
+          terraform init
+
+      - name: terraform apply
+        run: |
+          cd infra
+          terraform apply -auto-approve
+
+```
+The file containing the YAML code that defines a GitHub actions pipeline is called a workflow. The create_infra.yml workflow consists of two jobs; a plan job and an apply job. The apply job needs the plan job to run first and requires approval before running. The workflow has a workflow_dispatch trigger, meaning you can run it using a “Run” button on the UI, and uses an Ubuntu virtual machine as the runner. The jobs consist of the following steps:
+- checkout code – Downloads a copy of the repository to the virtual machine
+- run checkov scan – Scans the terraform configuration for vulnerabilities. Checkov is a policy as code tool specifically designed for this purpose.
+- fetch tokens – Connects to your Doppler account and gets secrets defined in the dev workspace
+- setup terraform – Downloads and installs Terraform CLI on the runner
+- set terraform cloud token – Copies the Terraform token returned in the fetch tokens step to environment variables.
+- terraform init – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project)
+- terraform plan – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
+- terraform apply – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
+If you wonder why both jobs both contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
+
+#### Run the pipeline
+You are now ready to create your first infrastructure by running the infrastructure creation pipeline. Go to `Actions` -> `Create Required Infrastructure` -> `Run Workflow` -> `Run Workflow`.
+
+![run infra pipeline 1](./assets/imgs/run_infra_pipeline1.png)
+
+Refresh the page to see the triggered workflow run.
+
+![run infra pipeline 2](./assets/imgs/run_infra_pipeline2.png)
+
+Click on the run and you will see the jobs running. The workflow consists of two jobs. The First job plans the changes, the second job requests your approval and then applies the changes once you have approved. After the first job has finished running, approve the second job by clicking `Review deployments`
+
+![run infra pipeline 3](./assets/imgs/run_infra_pipeline3.png)
+
+Select the `dev` check box and approve the deployment by clicking `Approve and deploy`.
+
+![run infra pipeline 4](./assets/imgs/run_infra_pipeline4.png)
+
+When the job finishes running, go to IBM Cloud, click on `Containers` -> `Serverless Projects`.
+
+![infra confirmation 1](./assets/imgs/infra_confirmation1.png)
+
+You should see a code engine project named end_to_end_devops.
+
+![infra confirmation 2](./assets/imgs/infra_confirmation2.png)
+
+> [!ERROR]
+> If you run into errors while running the GitHub Actions pipeline, confirm you did not miss any of the steps above.
+> Next, leverage the power of Artificial Intelligence by asking an AI agent like co-pilot to explain the error to you.
 
 
 

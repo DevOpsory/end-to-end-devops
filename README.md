@@ -292,14 +292,14 @@ jobs:
 
 ```
 The file containing the YAML code that defines a GitHub actions pipeline is called a workflow. The create_infra.yml workflow consists of two jobs; a plan job and an apply job. The apply job needs the plan job to run first and requires approval before running. The workflow has a workflow_dispatch trigger, meaning you can run it using a “Run” button on the UI, and uses an Ubuntu virtual machine as the runner. The jobs consist of the following steps:
-- checkout code – Downloads a copy of the repository to the virtual machine
-- run checkov scan – Scans the terraform configuration for vulnerabilities. Checkov is a policy as code tool specifically designed for this purpose.
-- fetch tokens – Connects to your Doppler account and gets secrets defined in the dev workspace
-- setup terraform – Downloads and installs Terraform CLI on the runner
-- set terraform cloud token – Copies the Terraform token returned in the fetch tokens step to environment variables.
-- terraform init – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project)
-- terraform plan – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
-- terraform apply – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
+- **checkout code** – Downloads a copy of the repository to the virtual machine
+- **run checkov scan** – Scans the terraform configuration for vulnerabilities. Checkov is a policy as code tool specifically designed for this purpose.
+- **fetch tokens** – Connects to your Doppler account and gets secrets defined in the dev workspace
+- **setup terraform** – Downloads and installs Terraform CLI on the runner
+- **set terraform cloud token** – Copies the Terraform token returned in the fetch tokens step to environment variables.
+- **terraform init** – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project)
+- **terraform plan** – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
+- **terraform apply** – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
 If you wonder why both jobs both contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
 
 #### Run the pipeline

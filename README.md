@@ -327,7 +327,7 @@ You should see a code engine project named end_to_end_devops.
 
 ![infra confirmation 2](./assets/imgs/infra_confirmation2.png)
 
-> [!ERROR]
+> [!Tip]
 > If you run into errors while running the GitHub Actions pipeline, confirm you did not miss any of the steps above.
 > Next, leverage the power of Artificial Intelligence by asking an AI agent like co-pilot to explain the error to you.
 

@@ -136,11 +136,78 @@ Click on `Configure environment`, check `Required reviewers`, add your GitHub us
 
 ![github environment setup pic 3](./assets/imgs/github_env3.png)
 
+#### Explanation of the infrastructure definition in Terraform
+The infrastructure code is stored in the infra folder and is defined by four Terraform files;  provider.tf, backend.tf, code_engine.tf and variables.tf.
+##### provider.tf
 
+```terraform
+terraform {
+  required_providers {
+    ibm = {
+      source  = "IBM-Cloud/ibm"
+      version = ">= 1.12.0"
+    }
+  }
+}
 
+# Configure the IBM Provider
+provider "ibm" {
+  ibmcloud_api_key = var.ibmcloud_api_key
+  region           = "eu-gb" # you can change this to your own region
+}
 
+```
+These lines of code tell Terraform who the cloud provider is (IBM Cloud), the name of the IBM Cloud API KEY which it needs to access the IBM Cloud account to provision resources, and the cloud region where the infrastructure should be created. Most cloud computing companies provide a free to use plugin (known as providers) for Terraform to easily integrate with their platform and provision resources when authorized. You can read more about the IBM Cloud provider plugin here: https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs.
 
+##### backend.tf
 
+```terraform
+terraform {
+  backend "remote" {
+    hostname     = "app.terraform.io"
+    organization = "end-to-end-devops"
+
+    workspaces {
+      name = "end-to-end-devops-infra"
+    }
+  }
+}
+
+```
+
+These lines tell Terraform that we will be storing information about the state of the infrastructure in the Terraform Cloud account that was created earlier, and provides the name of the organization and the name of the workspace. Terraform will also check the workspace for values of any variable that was declared and used in the files if they are not supplied at run time.
+
+##### variables.tf
+
+```terraform
+# Declare a variable for the api key
+variable "ibmcloud_api_key" {
+  description = "IBM Cloud API key for authentication"
+  type        = string
+  sensitive   = true
+}
+
+```
+These lines tell Terraform that a variable named "ibmcloud_api_key" would be used, it is a string, and contains sensitive information. It is a Terraform best practice to define all variables used in an infrastructure definition in a separate file named variables.tf.
+
+##### code_engine.tf
+
+```terraform
+data "ibm_resource_group" "group" {
+  name = "Default"
+}
+
+resource "ibm_code_engine_project" "devops_ce_project" {
+  name              = "end_to_end_devops"
+  resource_group_id = data.ibm_resource_group.group.id
+}
+
+```
+
+These lines define a code engine project which is the infrastructure that is used to run the application on IBM Cloud. In a real business setup, applications are deployed to a Kubernetes cluster on a cloud platform. Since the goal of this project is to provide an easy to understand example deployment while ensuring that it can be done using free resources, we will be using IBM Cloud code engine for the deployment. IBM Cloud Code Engine is built on Kubernetes, but it abstracts away the complexity so you don’t need to manage Kubernetes clusters directly and has a generous amount of free tier. 
+When you created your IBM Cloud account earlier, a resource group named “Default” was created for you. Resource groups are used to group your cloud resources, making it easier to assign access, monitor usage, and maintain governance. Lines 1-3 fetch information about the “Default” resource group for the IBM Cloud account. Lines 5-8 create the code engine project with name “end_to_end_devops” and attach the id of the default resource group fetched as part of the data in lines 1-3 to it.
+
+#### Explanation of the pipeline
 
 
 

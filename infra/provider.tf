@@ -12,5 +12,3 @@ provider "ibm" {
   ibmcloud_api_key = var.ibmcloud_api_key
   region           = "eu-gb" # you can change this to your own region
 }
-
-

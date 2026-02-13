@@ -204,7 +204,8 @@ resource "ibm_code_engine_project" "devops_ce_project" {
 
 ```
 
-These lines define a code engine project which is the infrastructure that is used to run the application on IBM Cloud. In a real business setup, applications are deployed to a Kubernetes cluster on a cloud platform. Since the goal of this project is to provide an easy to understand example deployment while ensuring that it can be done using free resources, we will be using IBM Cloud code engine for the deployment. IBM Cloud Code Engine is built on Kubernetes, but it abstracts away the complexity so you don’t need to manage Kubernetes clusters directly and has a generous amount of free tier. 
+These lines define a code engine project which is the infrastructure that is used to run the application on IBM Cloud. In a real business setup, applications are deployed to a Kubernetes cluster on a cloud platform. Since the goal of this project is to provide an easy to understand example deployment while ensuring that it can be done using free resources, we will be using IBM Cloud code engine for the deployment. IBM Cloud Code Engine is built on Kubernetes, but it abstracts away the complexity so you don’t need to manage Kubernetes clusters directly and has a generous amount of free tier.
+
 When you created your IBM Cloud account earlier, a resource group named “Default” was created for you. Resource groups are used to group your cloud resources, making it easier to assign access, monitor usage, and maintain governance. Lines 1-3 fetch information about the “Default” resource group for the IBM Cloud account. Lines 5-8 create the code engine project with name “end_to_end_devops” and attach the id of the default resource group fetched as part of the data in lines 1-3 to it.
 
 #### Explanation of the pipeline

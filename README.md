@@ -323,7 +323,7 @@ When the job finishes running, go to IBM Cloud, click on `Containers` -> `Server
 
 ![infra confirmation 1](./assets/imgs/infra_confirmation1.png)
 
-You should see a code engine project named end_to_end_devops.
+You should see a code engine project named `end_to_end_devops`.
 
 ![infra confirmation 2](./assets/imgs/infra_confirmation2.png)
 

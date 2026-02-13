@@ -300,7 +300,7 @@ The file containing the YAML code that defines a GitHub actions pipeline is call
 - **terraform init** – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project)
 - **terraform plan** – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
 - **terraform apply** – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
-If you wonder why both jobs both contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
+If you wonder why both jobs contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
 
 #### Run the pipeline
 You are now ready to create your first infrastructure by running the infrastructure creation pipeline. Go to `Actions` -> `Create Required Infrastructure` -> `Run Workflow` -> `Run Workflow`.

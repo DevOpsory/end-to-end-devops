@@ -296,7 +296,7 @@ The file containing the YAML code that defines a GitHub Actions pipeline is call
 - **run checkov scan** – Scans the terraform configuration for vulnerabilities. Checkov is a policy as code tool specifically designed for this purpose.
 - **fetch tokens** – Connects to your Doppler account and gets secrets defined in the dev workspace. Note that we adopted the official action by doppler but pinned it to a commit SHA. This is the most secure way to adopt existing actions because commit SHAs are unique per code you push to GitHub. Adopting the action this way means you are certain of the exact code that your action will run.
 - **setup terraform** – Downloads and installs Terraform CLI on the runner.
-- **set terraform cloud token** – Copies the Terraform token returned in the fetch tokens step to environment variables.
+- **set terraform cloud token** – Copies the Terraform token returned in the fetch tokens step to an environment variable used by terraform for authentication.
 - **terraform init** – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project).
 - **terraform plan** – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
 - **terraform apply** – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.

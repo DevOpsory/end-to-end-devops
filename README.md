@@ -136,10 +136,10 @@ Click on `Configure environment`, check `Required reviewers`, add your GitHub us
 
 ![github environment setup pic 3](./assets/imgs/github_env3.png)
 
-#### Explanation of the infrastructure definition in Terraform
+#### Explanation of the Infrastructure Definition in Terraform
 The infrastructure code is stored in the infra folder and is defined by four Terraform files;  provider.tf, backend.tf, code_engine.tf and variables.tf.
-##### provider.tf
 
+##### provider.tf
 ```terraform
 terraform {
   required_providers {
@@ -160,7 +160,6 @@ provider "ibm" {
 These lines of code tell Terraform who the cloud provider is (IBM Cloud), the name of the IBM Cloud API KEY which it needs to access the IBM Cloud account to provision resources, and the cloud region where the infrastructure should be created. Most cloud computing companies provide a free to use plugin (known as providers) for Terraform to easily integrate with their platform and provision resources when authorized. You can read more about the IBM Cloud provider plugin here: https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs.
 
 ##### backend.tf
-
 ```terraform
 terraform {
   backend "remote" {
@@ -178,7 +177,6 @@ terraform {
 These lines tell Terraform that we will be storing information about the state of the infrastructure in the Terraform Cloud account that was created earlier, and provides the name of the organization and the name of the workspace. Terraform will also check the workspace for values of any variable that was declared and used in the files if they are not supplied at run time.
 
 ##### variables.tf
-
 ```terraform
 # Declare a variable for the api key
 variable "ibmcloud_api_key" {
@@ -191,7 +189,6 @@ variable "ibmcloud_api_key" {
 These lines tell Terraform that a variable named "ibmcloud_api_key" would be used, it is a string, and contains sensitive information. It is a Terraform best practice to define all variables used in an infrastructure definition in a separate file named variables.tf.
 
 ##### code_engine.tf
-
 ```terraform
 data "ibm_resource_group" "group" {
   name = "Default"
@@ -208,8 +205,7 @@ These lines define a code engine project which is the infrastructure that is use
 
 When you created your IBM Cloud account earlier, a resource group named “Default” was created for you. Resource groups are used to group your cloud resources, making it easier to assign access, monitor usage, and maintain governance. Lines 1-3 fetch information about the “Default” resource group for the IBM Cloud account. Lines 5-8 create the code engine project with name “end_to_end_devops” and attach the id of the default resource group fetched as part of the data in lines 1-3 to it.
 
-#### Explanation of the pipeline
-
+#### Explanation of the Pipeline
 ```yml
 name: Create Required Infrastructure 
 
@@ -302,7 +298,7 @@ The file containing the YAML code that defines a GitHub Actions pipeline is call
 - **terraform apply** – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
 If you wonder why both jobs contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
 
-#### Run the pipeline
+#### Run the Pipeline
 You are now ready to create your first infrastructure by running the infrastructure creation pipeline. Go to `Actions` -> `Create Required Infrastructure` -> `Run Workflow` -> `Run Workflow`.
 
 ![run infra pipeline 1](./assets/imgs/run_infra_pipeline1.png)
@@ -331,8 +327,7 @@ You should see a code engine project named `end_to_end_devops`.
 > If you run into errors while running the GitHub Actions pipeline, confirm you did not miss any of the steps above.
 > Next, leverage the power of Artificial Intelligence by asking an AI agent like co-pilot to explain the error to you.
 
-### Deploy The Application
-
+### Deploy the Application
 The repository contains a simple java application, something similar to the classic `hello world!`. The application is stored in the `app` folder, along with its dependencies definition and a Docker image definition. The application and test code is stored in the `src` subfolder. To keep things simple, I will not go into granular details of the application source code.
 The Dockerfile helps to containerize the application. This means that the application contains everything it needs to run, i.e. to run the application, you do not need to first install a java runtime engine. This helps ensure the application can run anywhere and eliminates a classic problem: `It works on my machine`.
 
@@ -363,11 +358,13 @@ Generate an access token by going to `My Account` -> `Security`. Copy the token 
 ![sonarqube setup 4](./assets/imgs/sonarqube_setup4.png)
 
 Next, create a free account on [Snyk](https://app.snyk.io/) using your Github account. Snyk is a tool that helps identify vulnerabilities in code, open source dependencies, containers, and infrastructure as code. In this project, it is used for Software Composition Analysis (SCA), i.e. to scan for vulnerabilities in the external dependencies used in this project. Using external dependencies halp speed up and simplify software development by reusing code shared by others.
+
 Here is a sample result of Snyk scan of the dependencies in this project:
 
 ![snyk result](./assets/imgs/snyk_result.png)
 
-The Snyk scan will fail based on the severity of the vulnerabilities found in the external dependencies. You can also tell snyk the severity threshold at which scans should fail.
+The Snyk scan will fail based on the severity of vulnerabilities found in the external dependencies and tell you if there are newer versions in which the vulnerabilities were fixed. You can also tell snyk the severity threshold at which scans should fail.
+
 After creating your account, Snyk will generate a token for you which you can copy and use to run Snyk scans using Snyk CLI. Click <YOUR_ACCOUNT> -> `Account settings` -> `Auth Token` -> `click to show`
 
 ![snyk setup 1](./assets/imgs/snyk_setup1.png)
@@ -381,8 +378,7 @@ Select the end-to-end-devops repository and wait for the project to finish impor
 
 ![snyk setup 3](./assets/imgs/snyk_setup3.png)
 
-####  Explanation of the Pipeline
-
+#####  Explanation of the Pipeline
 ```yaml
 name: CI/CD Pipeline
 
@@ -489,6 +485,186 @@ The GitHub actions job for continuous integration is included in the `cicd.yml` 
 - **perform codeql analysis** – Performs the CodeQL analysis.
 - **test build docker image** – Containerizes the built app in the “build and scan with sonarqube step” into a docker image to validate the definition in the Dockerfile.
 - **scan docker image with trivy** – Scans the image for vulnerabilities. Trivy is a tool for scanning IaC, kubernetes and docker images for vulnerabilities, exposed secrets and misconfiguration.
+
+#### Continuous Delivery
+Continuous Delivery is a practice where code changes are automatically built and packaged so that they are always in a deployable state, enabling fast and reliable releases to production at any time. Before you can run the continuous delivery job in this project, there is a prerequisite you need to complete.
+
+Create a free [Cloudsmith account](https://app.cloudsmith.com/). Cloudsmith is an artifact storage solution that helps to securely store and distribute software packages and container images. The docker image created by the Continuous Delivery job will be pushed to your Cloudsmith account. If prompted during the account creation, set your username (user slug/identifier) as `my-cloudsmith-user` and create a new workspace named `sample-workspace`. If you did not get an option to set your username or create a workspace during the account creation process, go to `My Account` -> `Profile` -> `Rename user slug/identifier`, to set the username. Go to `My Account` -> `Workspaces` -> `Create workspace`, to create the workspace.
+
+![cloudsmith setup](./assets/imgs/cloudsmith_setup.png)
+
+In your workspace, create a new repository by clicking `New repository`. Name the repository `sample-docker-repository`.
+Create and copy your Personal API Key by going to `My Account` -> `Personal API Keys`. Add the token to your Doppler dev workspace as `CLOUDSMITH_TOKEN`. At this point, your Doppler dev workspace should look like below.
+
+![doppler complete workspace](./assets/imgs/doppler_complete_workspace.png)
+
+##### Explanation of the Pipeline
+```yaml
+  containerize-and-deliver:
+    name: Continuous Delivery
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if:   ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    outputs:
+      semver: ${{ steps.generate_semver.outputs.fullSemVer }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: fetch tokens
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+      
+      - name: setup java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      
+      - name: build with maven
+        run: |
+          cd app
+          mvn clean package -DskipTests
+
+      - name: install gitversion
+        uses: gittools/actions/gitversion/setup@v4.2.0
+        with:
+          versionSpec: '6.4.x'
+
+      - name: generate semver
+        id: generate_semver
+        uses: gittools/actions/gitversion/execute@v4.2.0
+
+      - name: show semver
+        run: |
+          echo "FullSemVer: ${{ steps.generate_semver.outputs.fullSemVer }}"
+
+      - name: build docker image
+        run: |
+          cd app
+          docker build -t sample-docker-image .
+
+      - name: tag and push to cloudsmith
+        env:
+          USERNAME: my-cloudsmith-user
+          PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
+        run: |
+          echo ${{ env.PASSWORD }} | docker login -u ${{ env.USERNAME }} --password-stdin  docker.cloudsmith.io
+          docker tag sample-docker-image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
+          docker push docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ steps.generate_semver.outputs.fullSemVer }}
+```
+
+The continuous delivery job runs only when code changes are merged to the main branch or when the workflow is manually triggered on the main branch. It consists of the following steps:
+- **checkout code** – Same as explained earlier.
+- **fetch tokens** – Same as explained earlier.
+- **setup java and maven** – Same as explained earlier.
+- **build with maven** – Builds the code and skips testing since this was done in the Continuous Integration job.
+- **install gitversion** – Installs gitversion, a tool for generating semantic version numbers from the job. e.g 2.3.0. This helps us to generate automatic and unique version numbers for our application.
+- **generate semver** – Generates the semantic version number after installing gitversion.
+- **show semver** – Shows the generated semantic version from the last step for visual feedback.
+- **build docker image** – Containerizes the built app in the `build with maven step` into a  docker image using the definition in the Dockerfile.
+- **tag and push to cloudsmith** – Pushes the docker image into the sample-docker-repo created earlier.
+
+#### Continuous Deployment
+Continuous Deployment is a practice where every code change that passes automated testing is automatically released to production without manual approval. This leads to quicker feature releases and bug fixes.
+
+##### Explanation of the pipeline
+```yaml
+  deploy:
+    name: Continuous Deployment
+    runs-on: ubuntu-latest
+    needs: containerize-and-deliver
+    if:   ${{ (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    env:
+      SEMVER: ${{ needs.containerize-and-deliver.outputs.semver }}
+    steps:
+      - name: fetch tokens
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: install ibmcloud cli
+        run: |
+          curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+
+      - name: verify ibmcloud cli
+        run: ibmcloud --version
+
+      - name: ibmcloud login
+        env:
+          API_KEY: ${{ steps.doppler.outputs.IBMCLOUD_API_KEY }}
+        run: |
+          ibmcloud login --apikey ${{ env.API_KEY }} -r eu-gb
+          ibmcloud target -g Default
+      
+      - name: install ibmcloud code engine plugin
+        run: ibmcloud plugin install code-engine -f
+
+      - name: verify code engine plugin
+        run: ibmcloud ce
+
+      - name: select code engine project
+        run: |
+          if ! ibmcloud ce project select --name end_to_end_devops; then
+            echo "project not found, make sure you have created the rquired infrastructure first"
+          fi        
+
+      - name: create registry secret
+        env:
+          USERNAME: my-cloudsmith-user
+          PASSWORD: ${{ steps.doppler.outputs.CLOUDSMITH_TOKEN }}
+        run: |
+          if ibmcloud ce secret get --name my-secret; then
+            ibmcloud ce secret delete --name my-secret -f
+          fi
+           ibmcloud ce secret create --name my-secret --format registry \
+           --server docker.cloudsmith.io --username "$USERNAME" --password $PASSWORD 
+
+      - name: deploy application to code engine
+        run: |
+          if ibmcloud ce application get --name sample-deployed-app > /dev/null 2>&1; then
+            echo "updating application..."
+            ibmcloud ce application update --name sample-deployed-app \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ env.SEMVER }} \
+            --registry-secret my-secret
+          else
+            echo "deploying new application..."
+            ibmcloud ce application create --name sample-deployed-app \
+            --image docker.cloudsmith.io/sample-workspace/sample-docker-repo/sample-docker-image:${{ env.SEMVER }} \
+            --registry-secret my-secret --cpu 0.5 --memory 1G --max-scale 1 --min-scale 0 
+          fi
+```
+The continuous deployment job in this project runs only when code changes are merged to the main branch or when the workflow is manually triggered on the main branch. It consists of the following steps:
+- **fetch tokens** – Same as explained earlier.
+- **install ibmcloud cli** – Installs ibmcloud cli, a cli tool from IBM for managing cloud resources.
+- **verify ibmcloud cli** – Verifies that ibmcloud cli is installed. 
+- **ibmcloud login** – Logs in to the target IBM Cloud account.
+- **install ibmcloud code engine plugin** – Installs code engine plugin for ibmcloud cli
+- **verify code engine plugin** – Verifies that code engine plugin is installed
+- **select code engine project** – Selects the target code engine project, which is the project we created earlier
+- **create registry secret** – Removes any existing secret and creates a new secret with the user name supplied and  the Cloudsmith token fetched from  Doppler. The secret is required to fetch the docker image uploaded in the continuous delivery job from Cloudsmith.
+- **deploy application to code engine** – Checks if there is an existing application named `sample-deployed-app` in the code engine project and updates it with the new image pulled from Cloudsmith. If there is no application by that name, it creates a new application.
+
+After the job succeeds, you should see a web URL to the application you just deployed in the output. Click on the URL and you should see your application running live after about 2 minutes.
+
+![deployment url](./assets/imgs/deployment_url.png)
+
+The App should look like this:
+
+![deployment page](./assets/imgs/deployment_page.png)
+
+Congratulations! You just deployed your first application!
+
+
+
+
+
 
 <br>
 <br>

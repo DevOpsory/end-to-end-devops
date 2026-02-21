@@ -291,13 +291,13 @@ jobs:
           terraform apply -auto-approve
 
 ```
-The file containing the YAML code that defines a GitHub actions pipeline is called a workflow. The create_infra.yml workflow consists of two jobs; a plan job and an apply job. The apply job needs the plan job to run first and requires approval before running. The workflow has a workflow_dispatch trigger, meaning you can run it using a “Run” button on the UI, and uses an Ubuntu virtual machine as the runner. The jobs consist of the following steps:
-- **checkout code** – Downloads a copy of the repository to the virtual machine
+The file containing the YAML code that defines a GitHub actions pipeline is called a workflow. The `create_infra.yml` workflow consists of two jobs; a plan job and an apply job. The apply job needs the plan job to run first and requires approval before running. The workflow has a workflow_dispatch trigger, meaning you run it using a `Run` button on the UI, and uses an Ubuntu virtual machine as the runner. The jobs consist of the following steps:
+- **checkout code** – Downloads a copy of the repository to the virtual machine. Note that this is achieved through an already existing action, `actions/checkout` and pinned to version 3. Reusing existing actions help speed up tasks and avoid reinventing the wheel. This is achieved by using the `uses` keyword in GitHub actions.
 - **run checkov scan** – Scans the terraform configuration for vulnerabilities. Checkov is a policy as code tool specifically designed for this purpose.
-- **fetch tokens** – Connects to your Doppler account and gets secrets defined in the dev workspace
-- **setup terraform** – Downloads and installs Terraform CLI on the runner
+- **fetch tokens** – Connects to your Doppler account and gets secrets defined in the dev workspace. Note that we adopted the official action by doppler but pinned it to a commit SHA. This is the most secure way to adopt existing actions because commit SHAs are unique per code you push to GitHub. Adopting the action this way means you are certain of the exact code that your action will run.
+- **setup terraform** – Downloads and installs Terraform CLI on the runner.
 - **set terraform cloud token** – Copies the Terraform token returned in the fetch tokens step to environment variables.
-- **terraform init** – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project)
+- **terraform init** – Changes directory to the infra folder and initializes Terraform. When a `terraform init` command is run, Terraform downloads API plugins from the cloud provider (which is IBM Cloud for this project) and also initializes the backend (which is Terraform Cloud for this project).
 - **terraform plan** – Changes directory to the infra folder and provides a summary of the infrastructure that will be created based on the definition in code_engine.tf. This step is only executed in the plan job. A typical plan looks like below.
 - **terraform apply** – Changes directory to the infra folder and creates the infrastructure based on the definition in code_engine.tf. This step is only executed in the apply job.
 If you wonder why both jobs contain the same first five steps, it is because each GitHub Actions job run on a different virtual machine and steps in one job are not directly visible to another job. Information can still be passed between jobs, but that is out of the scope of this article.
@@ -331,9 +331,164 @@ You should see a code engine project named `end_to_end_devops`.
 > If you run into errors while running the GitHub Actions pipeline, confirm you did not miss any of the steps above.
 > Next, leverage the power of Artificial Intelligence by asking an AI agent like co-pilot to explain the error to you.
 
+### Deploy The Application
 
+The repository contains a simple java application, something similar to the classic `hello world!`. The application is stored in the `app` folder, along with its dependencies definition and a Docker image definition. The application and test code is stored in the `src` subfolder. To keep things simple, I will not go into granular details of the application source code.
+The Dockerfile helps to containerize the application. This means that the application contains everything it needs to run, i.e. to run the application, you do not need to first install a java runtime engine. This helps ensure the application can run anywhere and eliminates a classic problem: `It works on my machine`.
 
+The workflow to deploy the app is named `cicd.yml`. It consists of three jobs; Continuous Integration, Continuous Delivery and Continuous Deployment. The workflow is triggered when changes to the code in the app folder is pushed to the project repository on GitHub, a Pull Request is created, or when manually dispatched on the UI.
 
+#### Continuous Integration
+Continuous Integration is a practice where developers frequently merge code changes into a shared repository, triggering automated builds and tests to detect integration issues early and ensure software quality. To successfully run the continuous integration job, you need to set up some prerequisites.
+First, create a free account on [SonarCloud](https://sonarcloud.io/).  SonarQube is a code analysis tool used in this project for Static Application Security Testing (SAST), i.e. used to analyze code before the code is run. It helps to detect code quality issues, vulnerabilities and security hotspots, leading to cleaner and safer software.
+Here is a sample result of SonarQube scan of the App in this project:
+
+![sonarqube result](./assets/imgs/sonarqube_result.png)
+
+The scan will fail if there is a serious problem with security, reliability, maintainability and hotspots. The scan can also be configured to fail based on code coverage or duplications.
+After creating your account, create a new organization. The easiest way to do this is to connect your GitHub account. Name the organization `sample-organization` and name the key `sampleorgkey`.
+
+![sonarqube setup 1](./assets/imgs/sonarqube_setup1.png)
+
+Import the end-to-end-devops project from GitHub to the Sonar Cloud organization.
+
+![sonarqube setup 2](./assets/imgs/sonarqube_setup2.png)
+
+Update the project key to end-to-end-devops by selecting the project -> `Administration` -> `Update Key`.
+
+![sonarqube setup 3](./assets/imgs/sonarqube_setup3.png)
+
+Generate an access token by going to `My Account` -> `Security`. Copy the token and add it to the Doppler dev workspace created in earlier steps as `SONARQUBE_TOKEN`.
+
+![sonarqube setup 4](./assets/imgs/sonarqube_setup4.png)
+
+Next, create a free account on [Snyk](https://app.snyk.io/) using your Github account. Snyk is a tool that helps identify vulnerabilities in code, open source dependencies, containers, and infrastructure as code. In this project, it is used for Software Composition Analysis (SCA), i.e. to scan for vulnerabilities in the external dependencies used in this project. Using external dependencies halp speed up and simplify software development by reusing code shared by others.
+Here is a sample result of Snyk scan of the dependencies in this project:
+
+![snyk result](./assets/imgs/snyk_result.png)
+
+The Snyk scan will fail based on the severity of the vulnerabilities found in the external dependencies. You can also tell snyk the severity threshold at which scans should fail.
+After creating your account, Snyk will generate a token for you which you can copy and use to run Snyk scans using Snyk CLI. Click <YOUR_ACCOUNT> -> `Account settings` -> `Auth Token` -> `click to show`
+
+![snyk setup 1](./assets/imgs/snyk_setup1.png)
+
+Add the token to your Doppler dev workspace as SNYK_TOKEN.
+Next, create a new organization and give it any name. Add your copy of this project Github repository to your Snyk organization by clicking `Projects` -> `Add Projects` -> `GitHub`.
+
+![snyk setup 2](./assets/imgs/snyk_setup2.png)
+
+Select the end-to-end-devops repository and wait for the project to finish importing.
+
+![snyk setup 3](./assets/imgs/snyk_setup3.png)
+
+####  Explanation of the Pipeline
+
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'app/**'
+      - '.github/workflows/cicd.yml'
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'app/**'
+      - '.github/workflows/cicd.yml'
+  workflow_dispatch:
+
+permissions:
+  security-events: write
+
+jobs:
+  build-and-test:
+    name: Continous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: fetch tokens
+        id: doppler
+        uses: dopplerhq/secrets-fetch-action@558a97f7f29b80c369cc89e9ecb697c7941dba87
+        with:
+          doppler-token: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: setup java and maven
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: run tests
+        run: |
+          cd app
+          mvn clean test
+
+      - name: build and scan with sonarqube
+        env:
+          SONAR_TOKEN: ${{ steps.doppler.outputs.SONARQUBE_TOKEN }}
+        run: |
+          cd app
+          mvn clean package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.java.jdkHome=${{ env.JAVA_HOME }} \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.organization=sampleorgkey \
+          -Dsonar.projectKey=end-to-end-devops
+
+      - name: setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: install snyk cli
+        run: npm install -g snyk
+
+      - name: snyk scan
+        env:
+          SNYK_TOKEN: ${{ steps.doppler.outputs.SNYK_TOKEN }}
+        run: snyk test --all-projects --severity-threshold=high
+
+      - name: initialize codeql
+        uses: github/codeql-action/init@v4
+        with:
+          languages: java
+          build-mode: autobuild
+
+      - name: perform codeql analysis
+        uses: github/codeql-action/analyze@v4
+
+      - name: test build docker image
+        run: |
+          cd app
+          docker build -t sample-docker-image .
+      
+      - name: scan docker image with trivy
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: sample-docker-image
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+```
+The GitHub actions job for continuous integration is included in the `cicd.yml` file. The continuous integration job runs when code is pushed to any branch, a pull request is raised or it is dispatched manually on any branch. It consists of the following steps:
+- **checkout code** – Same as explained earlier.
+- **fetch tokens** – Same as explained earlier.
+- **setup java and maven** – Installs java and maven on the runner.
+- **run tests** – Runs tests for the code in the app folder.
+- **build and scan with sonarqube** – Builds the code and scans with SonarQube. The app in the project has test coverage of only 33.3%. This way, the SonarQube Quality Gate for the project will fail. This helps you get a feel of how failures in SonarQube looks. The quality gate failure does not fail the pipeline. Try to write test cases to improve the coverage. Remember you can leverage AI to get this done. It is a very simple code and so a free model can help you with the tests. You can also experiment with the settings to make the pipeline fail when your preferred quality gate is not met.
+- **setup node.js** – Installs node.js on the runner. This is required to set up Snyk CLI.
+- **install snyk cli** – Installs Snyk CLI. This is required to perform Synk Scan.
+- **snyk scan** – Scans the external dependencies and fails when there is a high severity vulnerability. This behaviour is customizable. You are welcome to explore.
+- **initialize codeql** – Initializes CodeQL, a tool for code analysis from GitHub for advanced code .vulnerability detection.
+- **perform codeql analysis** – Performs the CodeQL analysis.
+- **test build docker image** – Containerizes the built app in the “build and scan with sonarqube step” into a docker image to validate the definition in the Dockerfile.
+- **scan docker image with trivy** – Scans the image for vulnerabilities. Trivy is a tool for scanning IaC, kubernetes and docker images for vulnerabilities, exposed secrets and misconfiguration.
 
 <br>
 <br>

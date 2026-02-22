@@ -661,7 +661,76 @@ The App should look like this:
 
 Congratulations! You just deployed your first application!
 
+### Create Monitoring Infrastructure
+The DevOps journey does not end after the application is deployed. In fact, it is a continuous cycle of making changes to an app, deploying the new version, monitoring the app and back to making changes. The Ops in DevOps is derived from oprations. It looks into operational requirements like patching/upgrading the application infrastructure, applying security updates, troubleshooting and resolving issues, monitoring the health of the application, et.c.
 
+![devops logo](./assets/imgs/devops_logo.png)
+
+For the sake of simplicity, we will only discuss monitoring in this project. Monitoring is the process of monitoring applications and infrastructure to ensure they are functioning correctly, so that issues can be detected early. In practice, a more advanced approach known as Observability is used. While traditional monitoring tells you if a system is working or not, Observability helps you figure out why it’s not working. Another monitoring practice from the SecOps field that often overlaps with DevOps is known as Protective Monitoring. It primarily focuses on threat detection to systems and how to respond.
+
+The monitoring infrastructure in this project is created similar to how the deployment infrastructure was created. The only difference is the definition for the monitoring infrastructure which is contained in monitoring/monitor.tf.
+
+#### monitor.tf
+
+```terraform
+data "ibm_resource_group" "group" {
+  name = "Default"
+}
+
+module "monitoring" { 
+  source = "git::https://github.com/terraform-ibm-modules/terraform-ibm-cloud-monitoring.git?ref=d147145b08e6ddadf2756cfb096a4174d580a4b8"
+
+  resource_group_id = data.ibm_resource_group.group.id
+  region            = "eu-gb" # you can change this to your own region
+  plan              = "lite"
+}
+```
+Lines 1-3 have been explained earlier in code_engine.tf. Lines 5-12 define a monitoring resource using an official Terraform module from IBM Cloud. Terraform modules are reusable infrastructure definitions that help streamline and standardize infrastructure creation on a cloud platform. You can read more about the IBM cloud-monitoring module and its usage [here](https://registry.terraform.io/modules/terraform-ibm-modules/observability-instances/ibm/latest/submodules/cloud_monitoring). Choosing plan “lite” on line 11 ensures that you get a free monitoring instance which you can use for 30 days. It is the only plan available for free.
+
+To create the monitoring resource, run the `create_monitoring.yml` pipeline in the .github/workflows folder. The workflow can only be dispatched by a manual trigger on the UI. The steps are similar to the create_infra.yml steps and should be familiar to you from creating the deployment infrastructure.
+After running the pipeline, a monitoring instance named `cloud-monitoring-<YOUR_REGION>` is created. If you did not change anything in the Terraform definition, the monitoring instance will be named `cloud-monitoring-eu-gb`. This instance will collect platform metrics for your IBM Cloud account which you can use to create dashboards and draw inferences about the application deployed in this project. 
+To enable platform metrics collection, login to IBM cloud -> `Observability` -> `Monitoring instances` -> `cloud-monitoring-<YOUR_REGION>` -> `Edit platform` (under location), then select your region and instance and save. It may take up to an hour for metrics about your application to become available.
+
+![monitoring confirmation 1](./assets/imgs/monitoring_confirmation1.png)
+
+![monitoring confirmation 2](./assets/imgs/monitoring_confirmation2.png)
+
+IBM Cloud includes a basic dashboard on the instance so you don’t have to worry about setting up a dashboard to monitor something as simple as the app you just deployed. The dashboard will show you things like current application state against desired state, number of times the application has been updated, etc. Click on “Dashboard” to see some of the widgets on the dashboard similar to those shown below.
+
+![monitoring dashboard 1](./assets/imgs/monitoring_dashboard1.png)
+
+![monitoring dashboard 2](./assets/imgs/monitoring_dashboard2.png)
+
+![monitoring dashboard 3](./assets/imgs/monitoring_dashboard3.png)
+
+Congratulations. You’ve now successfully practiced the core concepts of DevOps.
+
+This tutorial is by no means exhaustive. Some concepts were skipped on purpose to keep the project simple, focused on the basics and easily reproducible free of charge. Some more concepts to be aware of are:
+- **Rollback Strategy** – This focuses on implementing rollback steps in a CD pipeline (e.g., go back to previous deployment) when deployment fails. One example scenario that highlights the importance of this is when a new version of an app has been delivered to the target infrastructure, but the new version refuses to start up or keeps crashing on startup due to some infrastructure constraint. The rollback strategy will help return to the previous working version. 
+- **Logging** – This helps to deliver files containing important information (logs and metrics) about an application/platform to a central place for storage, analysis at regular intervals and visualization. This is very important for Observability. Popular tools used to achieve these objectives include Dynatrace, ELK stack, Prometheus and Grafana.
+- **Notifications** – Integration is often made with chat platforms and emails so that when a CI/CD pipeline fails or when an application is down, engineers are notified as soon as possible.
+- **Regular dependency updates** – Official developers of dependencies regularly release new versions with improved features and security updates. As a result, it is very important to have a mechanism of regularly updating dependencies used by applications to the latest stable version.
+
+### HOUSE KEEPING
+Cleaning up is a best practice in DevOps. It means destroying any created resources after you are done using them. Considering that this project is just for demonstration purposes, you should destroy created cloud resources when you are done experimenting. Two workflows have been defined for this purpose; `destroy_infra.yml` and `destroy_monitoring.yml`. The steps are similar to those in the workflows used to create the resources. However the plan and apply steps have been modified to destroy the resources as follows:
+- **terraform plan destroy** – This step is in the plan job and shows what is going to be destroyed when the apply job is approved. A typical destroy plan looks like below.
+
+![terraform plan destroy](./assets/imgs/terraform_plan_destroy.png)
+
+- **terraform destroy** – This step destroys the resources created using the terraform files in the current directory.
+
+> [!WARNING]
+> IBM Cloud has a concept called reclamations. This means that destroyed resources are kept in a state where they can be reclaimed for seven days.
+> During the reclamation period, you cannot create resources with the same name as resources in the reclamation state.
+> To create resources with the same name, you need to login to IBM Cloud, go to the section where the resources reside and delete reclamations.
+> In other words, if you run and approve `destroy_infra.yml` (or `destroy_monitoring.yml`), running `create_infra.yml` (or `create_monitoring.yml`) will fail unless you delete reclamations, or wait for seven days.
+
+## CONCLUSION
+In this tutorial, I have walked you through deploying a sample project using DevOps practices. I touched on core concepts like CI/CD, Infrastructure as Code, Code test and build, Secret management, Dependency and Vulnerabilities Scanning, Artifacts management, Containerization, Monitoring and more. If after going through this tutorial, you feel there’s any fundamental content that should have been included, go to the project repository and create an issue with as much details as possible so that the content can be improved.
+
+Remember AI is a powerful tool that you can leverage to bridge information gap and save time. If you find anything confusing, you can ask AI chatbots questions and ask for references so you have access to the documentation where the answers came from. For best results, keep your questions focused on a single thing at a time and include as much context as possible. Here is an example prompt: “how do I set up an API key to push/pull packages from Cloudsmith? I need to be able to do this from a CI/CD pipeline. Include references”.
+
+I wish you the best in your DevOps journey. Good luck!
 
 
 

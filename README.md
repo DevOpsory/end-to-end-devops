@@ -5,7 +5,24 @@ For a new or aspiring joiner in DevOps, the sheer breadth of the technology stac
 > [!NOTE]
 > This tutorial is a deep dive for beginners. Don't rush! I recommend breaking it into multiple sessions to ensure the concepts really stick.
 
+## Table of Contents
+- [Overview of Project](#overview-of-project)
+- [Devops Components You Will Learn](#devops-components-you-will-learn)
+- [Deploying Your Own Version of the Project](#deploying-your-own-version-of-the-project)
+  - [Fork the Repository](#fork-the-repository)
+  - [Setup Secrets Management](#setup-secrets-management)
+  - [Create Deployment Infrastructure](#create-deployment-infrastructure)
+  - [Deploy the Application](#deploy-the-application)
+    - [Continuous Integration](#continuous-integration)
+    - [Continuous Delivery](#continuous-delivery)
+    - [Continuous Deployment](#continuous-deployment)
+  - [Create Monitoring Infrastructure](#create-monitoring-infrastructure)
+- [House Keeping](#house-keeping)
+- [Conclusion](#conclusion)
+
 ## OVERVIEW OF PROJECT
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 The project consists of the following components:
 -   A simple ‘welcome to devops’ application written in java,
 -   A pipeline to create infrastructure through Infrastructure as code that the application will be deployed on,
@@ -14,6 +31,8 @@ The project consists of the following components:
 -	Pipelines to destroy created infrastructure once you have completed the project and are no longer actively working on it.
 
 ## DEVOPS COMPONENTS YOU WILL LEARN
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 The project in this repository touches on core components like:
 -	Source code version control,
 -	Secret management,
@@ -33,8 +52,10 @@ The project in this repository touches on core components like:
 
 Now Let’s dive into deploying your own version of the project. I enjoyed creating this project. I hope you enjoy replicating it and even go further to creating your own unique projects.
 
-## DEPLOYING YOUR OWN VERSION OF THE PROJECT
+## DEPLOYING YOUR OWN VERSION OF THE PROJECT 
 ### Fork the Repository
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 The first thing you need to do is to fork the project.
 
 ![fork repo](./assets/imgs/fork_repo.png)
@@ -46,6 +67,8 @@ When you fork a repository, GitHub copies the content of that repository to your
 In practice, keeping your application code and infrastructure configuration in the same repository is considered poor practice. I kept them in the same repository to make this project easy for you to follow. The app folder contains the application code and container image definition. The infra folder contains the deployment infrastructure code and the monitoring folder contains the monitoring infrastructure code. It is a best practice to separate monitoring infrastructure from the deployment infrastructure. This helps facilitate detection of issues independently of the systems or applications being monitored, reduces risk and improves performance.
 
 ### Setup Secrets Management
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Secrets management is an important concept in DevOps that looks at the secure handling of credentials used in pipelines. I collected some data driven reports to show you the importance of proper credential handling and give you an idea of how devastating badly handled credentials can be. A 2025 data analysis by [GitGuardian](https://www.gitguardian.com/state-of-secrets-sprawl-report-2025) revealed that about 23.8 million new secrets were detected in public GitHub commits in 2024 (+25% from the previous year). Leaked secrets, when they get into the hands of bad actors can lead to severe consequences like data breach. [A study at IBM](https://www.ibm.com/reports/data-breach) currently estimates the global average cost of data breach to be $4.4M.
 
 The easiest method of secrets handling is using GitHub Secrets which hosts secrets within a repository. In practice, organizations find this insufficient for many good reasons. To give you one very simplified example, imagine a hacker gets into your organization’s GitHub repo, they don’t just steal your code; they find the keys to your actual house. With those stored secrets, they can log into your infrastructure, delete your databases, or steal customer data, turning a 'code leak' into a total business shutdown.
@@ -65,6 +88,8 @@ Add the service token as a secret named `DOPPLER_TOKEN` in actions variables in 
 ![doppler token github secret](./assets/imgs/doppler_github_secret.png)
 
 ### Create Deployment Infrastructure
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Think of the deployment infrastructure as the computer on which your application will run. The computer will be hosted in the cloud. Cloud Computing is the process of using computers provided by Cloud Providers to run applications and services in exchange for a fee. Businesses and engineers don’t have to host physical computers, servers or data centres. One obvious advantage of this is that you can choose to pay for computing resources only when you need them and don’t need to worry about the purchase or maintenance of physical computing resources. According to research by [Gitnux](https://gitnux.org/cloud-industry-statistics/), over 90% of enterprises are using cloud services in some capacity with nearly 60% of companies seeing cost savings as the primary benefit of running applications in the cloud.
 
 The deployment infrastructure in this project is defined as code using Terraform. Terraform is an Infrastructure as Code (IaC) language, developed by Hashicorp and is widely used in the DevOps practice. One big advantage of using infrastructure as code is that it streamlines, standardizes and automates infrastructure creation. Imagine you want to create hundreds of servers in the cloud, doing this on the cloud provider’s UI will be error prone and grossly inefficient. IaC tools like Terraform can help you automate and streamline such tasks. If you are interested in learning more about how industries adopt IaC, you can look at the report by [Grand View Research](https://www.grandviewresearch.com/industry-analysis/infrastructure-as-code-market-report).
@@ -205,7 +230,7 @@ These lines define a code engine project which is the infrastructure that is use
 
 When you created your IBM Cloud account earlier, a resource group named “Default” was created for you. Resource groups are used to group your cloud resources, making it easier to assign access, monitor usage, and maintain governance. Lines 1-3 fetch information about the “Default” resource group for the IBM Cloud account. Lines 5-8 create the code engine project with name “end_to_end_devops” and attach the id of the default resource group fetched as part of the data in lines 1-3 to it.
 
-#### Explanation of the Pipeline
+#### Explanation of the Infrastructure Pipeline
 ```yml
 name: Create Required Infrastructure 
 
@@ -328,12 +353,16 @@ You should see a code engine project named `end_to_end_devops`.
 > Next, leverage the power of Artificial Intelligence by asking an AI agent like co-pilot to explain the error to you.
 
 ### Deploy the Application
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 The repository contains a simple java application, something similar to the classic `hello world!`. The application is stored in the `app` folder, along with its dependencies definition and a Docker image definition. The application and test code is stored in the `src` subfolder. To keep things simple, I will not go into granular details of the application source code.
 The Dockerfile helps to containerize the application. This means that the application contains everything it needs to run, i.e. to run the application, you do not need to first install a java runtime engine. This helps ensure the application can run anywhere and eliminates a classic problem: `It works on my machine`.
 
 The workflow to deploy the app is named `cicd.yml`. It consists of three jobs; Continuous Integration, Continuous Delivery and Continuous Deployment. The workflow is triggered when changes to the code in the app folder is pushed to the project repository on GitHub, a Pull Request is created, or when manually dispatched on the UI.
 
 #### Continuous Integration
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Continuous Integration is a practice where developers frequently merge code changes into a shared repository, triggering automated builds and tests to detect integration issues early and ensure software quality. To successfully run the continuous integration job, you need to set up some prerequisites.
 First, create a free account on [SonarCloud](https://sonarcloud.io/).  SonarQube is a code analysis tool used in this project for Static Application Security Testing (SAST), i.e. used to analyze code before the code is run. It helps to detect code quality issues, vulnerabilities and security hotspots, leading to cleaner and safer software.
 Here is a sample result of SonarQube scan of the App in this project:
@@ -378,7 +407,7 @@ Select the end-to-end-devops repository and wait for the project to finish impor
 
 ![snyk setup 3](./assets/imgs/snyk_setup3.png)
 
-#####  Explanation of the Pipeline
+#####  Explanation of the Integration Pipeline
 ```yaml
 name: CI/CD Pipeline
 
@@ -487,6 +516,8 @@ The GitHub actions job for continuous integration is included in the `cicd.yml` 
 - **scan docker image with trivy** – Scans the image for vulnerabilities. Trivy is a tool for scanning IaC, kubernetes and docker images for vulnerabilities, exposed secrets and misconfiguration.
 
 #### Continuous Delivery
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Continuous Delivery is a practice where code changes are automatically built and packaged so that they are always in a deployable state, enabling fast and reliable releases to production at any time. Before you can run the continuous delivery job in this project, there is a prerequisite you need to complete.
 
 Create a free [Cloudsmith account](https://app.cloudsmith.com/). Cloudsmith is an artifact storage solution that helps to securely store and distribute software packages and container images. The docker image created by the Continuous Delivery job will be pushed to your Cloudsmith account. If prompted during the account creation, set your username (user slug/identifier) as `my-cloudsmith-user` and create a new workspace named `sample-workspace`. If you did not get an option to set your username or create a workspace during the account creation process, go to `My Account` -> `Profile` -> `Rename user slug/identifier`, to set the username. Go to `My Account` -> `Workspaces` -> `Create workspace`, to create the workspace.
@@ -498,7 +529,7 @@ Create and copy your Personal API Key by going to `My Account` -> `Personal API 
 
 ![doppler complete workspace](./assets/imgs/doppler_complete_workspace.png)
 
-##### Explanation of the Pipeline
+##### Explanation of the Delivery Pipeline
 ```yaml
   containerize-and-deliver:
     name: Continuous Delivery
@@ -571,9 +602,11 @@ The continuous delivery job runs only when code changes are merged to the main b
 - **tag and push to cloudsmith** – Pushes the docker image into the sample-docker-repo created earlier.
 
 #### Continuous Deployment
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Continuous Deployment is a practice where every code change that passes automated testing is automatically released to production without manual approval. This leads to quicker feature releases and bug fixes.
 
-##### Explanation of the pipeline
+##### Explanation of the Deployment pipeline
 ```yaml
   deploy:
     name: Continuous Deployment
@@ -662,6 +695,8 @@ The App should look like this:
 Congratulations! You just deployed your first application!
 
 ### Create Monitoring Infrastructure
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 The DevOps journey does not end after the application is deployed. In fact, it is a continuous cycle of making changes to an app, deploying the new version, monitoring the app and back to making changes. The Ops in DevOps is derived from oprations. It looks into operational requirements like patching/upgrading the application infrastructure, applying security updates, troubleshooting and resolving issues, monitoring the health of the application, et.c.
 
 ![devops logo](./assets/imgs/devops_logo.png)
@@ -706,12 +741,15 @@ IBM Cloud includes a basic dashboard on the instance so you don’t have to worr
 Congratulations. You’ve now successfully practiced the core concepts of DevOps.
 
 This tutorial is by no means exhaustive. Some concepts were skipped on purpose to keep the project simple, focused on the basics and easily reproducible free of charge. Some more concepts to be aware of are:
+- **Deployment Strategy** - This helps define a structured approach to application deployment by making deployments predictable, repeatable and less risky. Popular approaches include canary and blue-green strategies.
 - **Rollback Strategy** – This focuses on implementing rollback steps in a CD pipeline (e.g., go back to previous deployment) when deployment fails. One example scenario that highlights the importance of this is when a new version of an app has been delivered to the target infrastructure, but the new version refuses to start up or keeps crashing on startup due to some infrastructure constraint. The rollback strategy will help return to the previous working version. 
 - **Logging** – This helps to deliver files containing important information (logs and metrics) about an application/platform to a central place for storage, analysis at regular intervals and visualization. This is very important for Observability. Popular tools used to achieve these objectives include Dynatrace, ELK stack, Prometheus and Grafana.
 - **Notifications** – Integration is often made with chat platforms and emails so that when a CI/CD pipeline fails or when an application is down, engineers are notified as soon as possible.
 - **Regular dependency updates** – Official developers of dependencies regularly release new versions with improved features and security updates. As a result, it is very important to have a mechanism of regularly updating dependencies used by applications to the latest stable version.
 
-### HOUSE KEEPING
+## HOUSE KEEPING
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 Cleaning up is a best practice in DevOps. It means destroying any created resources after you are done using them. Considering that this project is just for demonstration purposes, you should destroy created cloud resources when you are done experimenting. Two workflows have been defined for this purpose; `destroy_infra.yml` and `destroy_monitoring.yml`. The steps are similar to those in the workflows used to create the resources. However the plan and apply steps have been modified to destroy the resources as follows:
 - **terraform plan destroy** – This step is in the plan job and shows what is going to be destroyed when the apply job is approved. A typical destroy plan looks like below.
 
@@ -726,6 +764,8 @@ Cleaning up is a best practice in DevOps. It means destroying any created resour
 > In other words, if you run and approve `destroy_infra.yml` (or `destroy_monitoring.yml`), running `create_infra.yml` (or `create_monitoring.yml`) will fail unless you delete reclamations, or wait for seven days.
 
 ## CONCLUSION
+^ [Back to Top](#a-beginers-practical-guide-to-devops) ^
+
 In this tutorial, I have walked you through deploying a sample project using DevOps practices. I touched on core concepts like CI/CD, Infrastructure as Code, Code test and build, Secret management, Dependency and Vulnerabilities Scanning, Artifacts management, Containerization, Monitoring and more. If after going through this tutorial, you feel there’s any fundamental content that should have been included, go to the project repository and create an issue with as much details as possible so that the content can be improved.
 
 Remember AI is a powerful tool that you can leverage to bridge information gap and save time. If you find anything confusing, you can ask AI chatbots questions and ask for references so you have access to the documentation where the answers came from. For best results, keep your questions focused on a single thing at a time and include as much context as possible. Here is an example prompt: “how do I set up an API key to push/pull packages from Cloudsmith? I need to be able to do this from a CI/CD pipeline. Include references”.
